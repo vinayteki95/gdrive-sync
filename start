@@ -3,9 +3,9 @@
 # Use this application to synchronize your local directory of interest with a drive folder.
 
 # PARAMETERS
-LOCAL_PATH="/home/fr33b1rd/Documents/"         # Local directory path that needs to be synched
-REMOTE_PATH="RcloneSync/Documents/" # Remote directory path relative to remote root that needs to be synched
-RCLONE_REMOTE="personal-documents" # Rclone remote config name to use
+LOCAL_PATH="/home/fr33b1rd/Documents/" # Local directory path that needs to be synched
+REMOTE_PATH="RcloneSync/Documents/"    # Remote directory path relative to remote root that needs to be synched
+RCLONE_REMOTE="personal-documents"     # Rclone remote config name to use
 SKIP_RCLONE_SETUP="yes"
 
 # NON CHANGING PARAMETERS
