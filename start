@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Use this application to synchronize your local directory of interest with a drive folder.
+
+# PARAMETERS
+LOCAL_PATH="/home/fr33b1rd/Documents/"         # Local directory path that needs to be synched
+REMOTE_PATH="RcloneSync/Documents/" # Remote directory path relative to remote root that needs to be synched
+RCLONE_REMOTE="personal-documents" # Rclone remote config name to use
+SKIP_RCLONE_SETUP="yes"
+
+# NON CHANGING PARAMETERS
+RCLONE_CONFIG="/home/fr33b1rd/.config/rclone/rclone.conf"
+
+# Check for rclone (rclone will be our sync manager)
+if [ "$SKIP_RCLONE_SETUP" = "no" ]; then
+    dpkg-query --list rclone >&/dev/null
+    rclone_status=$?
+
+    if [ $rclone_status -eq 1 ]; then
+        echo "Dependency: rclone is currently not installed on your machine"
+        echo "Dependency: rclone will be installed for you"
+        apt-get install rclone -y
+        echo "Next Manual Step:"
+        echo "Use this link to configure rclone: https://rclone.org/drive/"
+
+    else
+        echo "Dependency: rclone is already present, make sure it is configured properly"
+        echo "Use this link to configure rclone: https://rclone.org/drive/"
+        echo "Set the \"SKIP_RCLONE_SETUP=yes\" once the setup is done"
+    fi
+
+    # [to-do] Will do this later when introducing interative setup
+    # read -p "Skip(if already done)? y/n" -r wait_bool
+    # if [ "$wait_bool" = "n" ]; then
+    #     echo "Comeback after the rclone setup is done"
+    #     exit 0
+    # fi
+fi
+
+# Verify rclone remote config availability
+
+echo "Rclone remotes search..."
+rclone --config=$RCLONE_CONFIG listremotes | grep -x "$RCLONE_REMOTE:" >&/dev/null
+remote_config_status=$?
+
+if [ "$remote_config_status" -eq 1 ]; then
+    echo "REMOTE_PATH is not available in rclone config. Exiting here."
+    exit 1
+else
+    echo "Remote config setup profile : $(rclone --config=$RCLONE_CONFIG listremotes | grep -x "$RCLONE_REMOTE:")"
+fi
+
+# Check for differences in local and remote locations
+rclone --config=$RCLONE_CONFIG check "$LOCAL_PATH" "$RCLONE_REMOTE:$REMOTE_PATH" >&/dev/null
+file_differences_status=$?
+
+if [ "$file_differences_status" -eq 0 ]; then
+    echo "No differences found between local and remote locations"
+else
+    echo "Found new files which will be synced now"
+    rclone --config=$RCLONE_CONFIG copy $LOCAL_PATH $RCLONE_REMOTE:$REMOTE_PATH >&/dev/null
+    rclone --config=$RCLONE_CONFIG copy $RCLONE_REMOTE:$REMOTE_PATH $LOCAL_PATH >&/dev/null
+    echo "Sync done"
+fi
